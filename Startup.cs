@@ -51,7 +51,9 @@ namespace Microsoft.BotBuilderSamples
 
             services.AddTransient<UserStateStorage>();
 
-            services.AddTransient<WelcomeDialog>();
+            services.AddTransient<WelcomeCard>();
+
+            services.AddTransient<SupportTicketCard>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

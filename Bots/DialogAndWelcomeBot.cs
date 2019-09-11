@@ -15,13 +15,13 @@ namespace QnABot.Bots
     public class DialogAndWelcomeBot<T> : DialogBot<T>
         where T : Dialog
     {
-        private readonly WelcomeDialog _welcomeDialog;
+        private readonly WelcomeCard _welcomeDialog;
 
         public DialogAndWelcomeBot(ConversationState conversationState,
             UserState userState,
             T dialog,
             ILogger<DialogBot<T>> logger,
-            WelcomeDialog welcomeDialog)
+            WelcomeCard welcomeDialog)
             : base(conversationState, userState, dialog, logger)
         {
             _welcomeDialog = welcomeDialog;

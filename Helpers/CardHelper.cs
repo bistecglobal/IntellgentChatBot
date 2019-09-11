@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Bot.Schema;
+using Newtonsoft.Json;
 using QnABot.Models;
 
 namespace QnABot.Helpers

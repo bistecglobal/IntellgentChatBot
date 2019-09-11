@@ -19,22 +19,27 @@ namespace QnABot.Bots
 {
     public class QnABot : ActivityHandler
     {
+        const int MIN_CONFIDENCE_SCORE = 50;
+
         private readonly IConfiguration _configuration;
         private readonly ILogger<QnABot> _logger;
         private readonly IQnAService _qnAService;
-        private readonly WelcomeDialog _welcomeDialog;
+        private readonly WelcomeCard _welcomeDialog;
+        private readonly SupportTicketCard _supportTicketCard;
 
         private QnAMakerEndpoint _qnAMakerEndpoint;
 
         public QnABot(IConfiguration configuration,
             ILogger<QnABot> logger,
             IQnAService qnAService,
-            WelcomeDialog welcomeDialog)
+            WelcomeCard welcomeDialog,
+            SupportTicketCard supportTicketCard)
         {
             _configuration = configuration;
             _logger = logger;
             _qnAService = qnAService;
             _welcomeDialog = welcomeDialog;
+            _supportTicketCard = supportTicketCard;
         }
 
         protected override async Task OnMembersAddedAsync(IList<ChannelAccount> membersAdded, ITurnContext<IConversationUpdateActivity> turnContext, CancellationToken cancellationToken)
@@ -54,15 +59,17 @@ namespace QnABot.Bots
 
             if (qnaResults.Any())
             {
-                // Get result by highest confidence
                 QnAResult highestRankedResult = qnaResults.OrderByDescending(x => x.Score).First();
                 string answer = highestRankedResult.Answer;
 
                 QnAPrompts[] prompts = highestRankedResult.Context?.Prompts;
-
+                
                 if (prompts == null || prompts.Length < 1)
                 {
-                    await turnContext.SendActivityAsync(answer, cancellationToken: cancellationToken);
+                    if (highestRankedResult.Score <= MIN_CONFIDENCE_SCORE)
+                        await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
+                    else
+                        await turnContext.SendActivityAsync(answer, cancellationToken: cancellationToken);
                 }
                 else
                 {
@@ -71,7 +78,7 @@ namespace QnABot.Bots
             }
             else
             {
-                await turnContext.SendActivityAsync(CardHelper.GetQuestionPrompts("You got what you want, or shall I create a ticket?"), cancellationToken: cancellationToken);
+                await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
             }
         }
 

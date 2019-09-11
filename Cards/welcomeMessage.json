@@ -8,7 +8,7 @@
             "columns": [
                 {
                     "type": "Column",
-                    "width": 2,
+                    "width": 3,
                     "items": [
                         {
                             "type": "TextBlock",
@@ -18,35 +18,13 @@
                         },
                         {
                             "type": "TextBlock",
-                            "text": "Please select what you want to do?",
+                            "text": "Please enter your query to proceed",
                             "isSubtle": true,
                             "wrap": true
-                        },
-                        {
-                            "type": "Input.Text",
-                            "id": "username",
-                            "placeholder": "Enter your name"
                         }
                     ]
                 }
             ]
-        }
-    ],
-    "actions": [
-        {
-            "type": "Action.Submit",
-            "title": "Ask a question",
-            "data":  {
-              "operation": "Question"
-            }
-        },
-        {
-            "type": "Action.Submit",
-            "title": "Create a support ticket",
-            "value": "Title",
-            "data": {
-              "operation": "Ticket"
-            }
         }
     ]
 }

@@ -1,0 +1,57 @@
+﻿{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.0",
+    "body": [
+        {
+            "type": "ColumnSet",
+            "columns": [
+                {
+                    "type": "Column",
+                    "width": 3,
+                    "items": [
+                        {
+                            "type": "TextBlock",
+                            "text": "Looks like we didn't find a good answer. Please fill in the form below to create a ticket.",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Your question?",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "question",
+                            "placeholder": "Enter your question",
+                            "value": "<%question%>"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Your comments?",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "id": "comments",
+                            "placeholder": "Enter your comments",
+                            "value": "<%comments%>"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Submit",
+            "data": {
+                "operation": "Submit"
+            }
+        }
+    ]
+}
