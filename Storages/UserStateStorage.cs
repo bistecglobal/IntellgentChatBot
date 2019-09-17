@@ -19,7 +19,7 @@ namespace QnABot.Storages
             {
                 AuthKey = configuration["CosmosDBKey"],
                 CollectionId = configuration["UserStateCollectionName"],
-                CosmosDBEndpoint = new Uri(configuration["CosmosDBKey"]),
+                CosmosDBEndpoint = new Uri(configuration["CosmosServiceEndpoint"]),
                 DatabaseId = configuration["CosmosDBDatabaseName"]
             });
         }

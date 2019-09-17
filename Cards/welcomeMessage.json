@@ -18,13 +18,38 @@
                         },
                         {
                             "type": "TextBlock",
-                            "text": "Please enter your query to proceed",
+                            "text": "Please enter your name",
                             "isSubtle": true,
                             "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "Your name",
+                            "id": "user"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Please enter your email",
+                            "isSubtle": true,
+                            "wrap": true
+                        },
+                        {
+                            "type": "Input.Text",
+                            "placeholder": "Your email",
+                            "id": "email"
                         }
                     ]
                 }
             ]
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Submit",
+            "data": {
+                "operation": "Submit"
+            }
         }
     ]
 }
