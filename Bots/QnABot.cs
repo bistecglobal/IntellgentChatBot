@@ -15,6 +15,7 @@ using Microsoft.Bot.Builder.AI.QnA;
 using System.Linq;
 using QnABot.States;
 using Newtonsoft.Json;
+using System;
 
 namespace QnABot.Bots
 {
@@ -27,6 +28,7 @@ namespace QnABot.Bots
         private readonly SupportTicketCard _supportTicketCard;
         private readonly BotConversationState _botConversationState;
         private readonly int _minConfidenceScore;
+        private readonly SupportTicket _supportTicket;
 
         private StepInformation stepInformation;
 
@@ -35,7 +37,8 @@ namespace QnABot.Bots
             IQnAService qnAService,
             WelcomeCard welcomeDialog,
             SupportTicketCard supportTicketCard,
-            BotConversationState botConversationState)
+            BotConversationState botConversationState,
+            SupportTicket supportTicket)
         {
             _configuration = configuration;
             _logger = logger;
@@ -43,6 +46,7 @@ namespace QnABot.Bots
             _welcomeDialog = welcomeDialog;
             _supportTicketCard = supportTicketCard;
             _botConversationState = botConversationState;
+            _supportTicket = supportTicket;
 
             int.TryParse(configuration["MinConfidenceScore"], out _minConfidenceScore);
         }
@@ -118,15 +122,6 @@ namespace QnABot.Bots
         {
             var conversationInformation = await GetConversationInformation(turnContext);
 
-            if (string.IsNullOrEmpty(conversationInformation.Question))
-            {
-                conversationInformation.Question = turnContext.Activity.Text;
-            }
-            else
-            {
-                conversationInformation.Comments.Add(turnContext.Activity.Text);
-            }
-
             QnAResult[] qnaResults = await _qnAService.QueryQnAServiceAsync(turnContext.Activity.Text, new QnABotState(), QnAMakerEndpoint);
 
             if (qnaResults.Any())
@@ -141,8 +136,9 @@ namespace QnABot.Bots
                     if (highestRankedResult.Score <= _minConfidenceScore)
                     {
                         stepInformation.Step = ChatStep.SupportTicket;
+                        conversationInformation.Question = turnContext.Activity.Text;
                         await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
-                        await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
+                        await turnContext.SendActivityAsync(_supportTicketCard.Create(turnContext.Activity.Text, String.Join(", ", conversationInformation.Comments.ToArray())), cancellationToken);
                     }
                     else
                     {
@@ -158,10 +154,6 @@ namespace QnABot.Bots
                     await turnContext.SendActivityAsync(CardHelper.GetHeroCardWithPrompts(answer, prompts), cancellationToken: cancellationToken);
                 }
             }
-            else
-            {
-                await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
-            }
         }
 
         private async Task CaptureSupportTicketInformation(ITurnContext turnContext, CancellationToken cancellationToken)
@@ -174,6 +166,13 @@ namespace QnABot.Bots
 
             supportInformation.Question = jsonData.Question;
             supportInformation.Comments = jsonData.Comments;
+
+            var response = await _supportTicket.Create(supportInformation);
+
+            if (!string.IsNullOrEmpty(response))
+                await turnContext.SendActivityAsync($"New ticket created in our incident tracker {response}", cancellationToken: cancellationToken);
+            else
+                await turnContext.SendActivityAsync("Incident creation failed", cancellationToken: cancellationToken);
         }
 
         private async Task<UserInformation> GetUserInformation(ITurnContext turnContext)
@@ -246,16 +245,6 @@ namespace QnABot.Bots
             get
             {
                 var hostname = _configuration["QnAEndpointHostName"];
-
-                if (!hostname.StartsWith("https://", System.StringComparison.CurrentCulture))
-                {
-                    hostname = string.Concat("https://", hostname);
-                }
-
-                if (!hostname.EndsWith("/qnamaker", System.StringComparison.CurrentCulture))
-                {
-                    hostname = string.Concat(hostname, "/qnamaker");
-                }
 
                 return hostname;
             }
