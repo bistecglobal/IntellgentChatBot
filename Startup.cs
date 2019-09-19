@@ -12,7 +12,7 @@ using Microsoft.Bot.Builder.AI.QnA;
 using QnABot.Models;
 using QnABot.Storages;
 using QnABot.Cards;
-using QnABot.Bots;
+using QnABot.States;
 
 namespace Microsoft.BotBuilderSamples
 {
@@ -35,6 +35,16 @@ namespace Microsoft.BotBuilderSamples
 
             // Create the Bot Framework Adapter with error handling enabled.
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
+
+            services.AddSingleton<IStorage, MemoryStorage>();
+
+            services.AddSingleton<BotUserState>();
+
+            services.AddSingleton<BotConversationState>();
+
+            services.AddSingleton<UserStateStorage>();
+
+            services.AddSingleton<ConversationStorage>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
             services.AddTransient<IBot, QnABot.Bots.QnABot>();

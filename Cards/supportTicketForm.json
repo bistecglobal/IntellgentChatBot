@@ -31,13 +31,13 @@
                         {
                             "type": "TextBlock",
                             "text": "Your comments?",
-                            "isSubtle": true,
                             "wrap": true
                         },
                         {
                             "type": "Input.Text",
                             "id": "comments",
                             "placeholder": "Enter your comments",
+                            "isMultiline": true,
                             "value": "<%comments%>"
                         }
                     ]
