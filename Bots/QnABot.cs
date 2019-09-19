@@ -26,28 +26,23 @@ namespace QnABot.Bots
         private readonly WelcomeCard _welcomeDialog;
         private readonly SupportTicketCard _supportTicketCard;
         private readonly BotConversationState _botConversationState;
-        private readonly BotUserState _botUserState;
+        private readonly int _minConfidenceScore;
 
         private StepInformation stepInformation;
-
-        private readonly int _minConfidenceScore;
 
         public QnABot(IConfiguration configuration,
             ILogger<QnABot> logger,
             IQnAService qnAService,
             WelcomeCard welcomeDialog,
             SupportTicketCard supportTicketCard,
-            BotConversationState botConversationState,
-            BotUserState botUserState)
+            BotConversationState botConversationState)
         {
             _configuration = configuration;
             _logger = logger;
             _qnAService = qnAService;
             _welcomeDialog = welcomeDialog;
             _supportTicketCard = supportTicketCard;
-
             _botConversationState = botConversationState;
-            _botUserState = botUserState;
 
             int.TryParse(configuration["MinConfidenceScore"], out _minConfidenceScore);
         }
@@ -69,9 +64,7 @@ namespace QnABot.Bots
         {
             await base.OnTurnAsync(turnContext, cancellationToken);
 
-            // Save any state changes that might have occured during the turn.
             await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
-            await _botUserState.SaveChangesAsync(turnContext, false, cancellationToken);
         }
 
         protected override async Task OnMessageActivityAsync(ITurnContext<IMessageActivity> turnContext,
@@ -83,73 +76,17 @@ namespace QnABot.Bots
             {
                 case ChatStep.UserInformation:
                 case ChatStep.None:
-                    CaptureUserInformation(turnContext, cancellationToken);
+                    await CaptureUserInformation(turnContext, cancellationToken);
                     break;
                 case ChatStep.ChatInformation:
-                    CaptureChatInformation(turnContext, cancellationToken);
+                    await CaptureChatInformation(turnContext, cancellationToken);
                     break;
                 case ChatStep.SupportTicket:
-                    CaptureSupportTicket(turnContext, cancellationToken);
+                    await CaptureSupportTicketInformation(turnContext, cancellationToken);
                     break;
                 default:
                     break;
             }
-
-            //QnAResult[] qnaResults = await _qnAService.QueryQnAServiceAsync(turnContext.Activity.Value.ToString(), new QnABotState(), QnAMakerEndpoint);
-
-            //if (qnaResults.Any())
-            //{
-            //    QnAResult highestRankedResult = qnaResults.OrderByDescending(x => x.Score).First();
-            //    var answer = highestRankedResult.Answer;
-
-            //    QnAPrompts[] prompts = highestRankedResult.Context?.Prompts;
-                
-            //    if (prompts == null || prompts.Length < 1)
-            //    {
-            //        if (highestRankedResult.Score <= _minConfidenceScore)
-            //            await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
-            //        else
-            //            await turnContext.SendActivityAsync(answer, cancellationToken: cancellationToken);
-            //    }
-            //    else
-            //    {
-            //        await turnContext.SendActivityAsync(CardHelper.GetHeroCardWithPrompts(answer, prompts), cancellationToken: cancellationToken);
-            //    }
-            //}
-            //else
-            //{
-            //    await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
-            //}
-        }
-
-        private QnAMakerEndpoint QnAMakerEndpoint
-        {
-            get
-            {
-                return new QnAMakerEndpoint
-                {
-                    KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
-                    EndpointKey = _configuration["QnAAuthKey"],
-                    Host = GetHostname()
-                };
-            }
-        }
-
-        private string GetHostname()
-        {
-            var hostname = _configuration["QnAEndpointHostName"];
-
-            if (!hostname.StartsWith("https://", System.StringComparison.Ordinal))
-            {
-                hostname = string.Concat("https://", hostname);
-            }
-
-            if (!hostname.EndsWith("/qnamaker", System.StringComparison.Ordinal))
-            {
-                hostname = string.Concat(hostname, "/qnamaker");
-            }
-
-            return hostname;
         }
 
         private async Task<StepInformation> GetConversationStep(ITurnContext turnContext)
@@ -161,11 +98,9 @@ namespace QnABot.Bots
 
         private async Task CaptureUserInformation(ITurnContext turnContext, CancellationToken cancellationToken)
         {
-            var userInformationStateAccessors = _botConversationState.CreateProperty<UserInformation>(nameof(UserInformation));
+            var userInformation = await GetUserInformation(turnContext);
 
-            var userInformation = await userInformationStateAccessors.GetAsync(turnContext, () => new UserInformation());
-
-            var inputValue = stepInformation.UserInputType == InputType.Text ? turnContext.Activity.Text : turnContext.Activity.Value.ToString();
+            var inputValue = turnContext.Activity.Value == null ? turnContext.Activity.Text : turnContext.Activity.Value.ToString();
 
             var jsonData = JsonConvert.DeserializeObject<UserInformation>(inputValue);
 
@@ -175,11 +110,23 @@ namespace QnABot.Bots
             validateUserInput(turnContext, jsonData, cancellationToken);
 
             stepInformation.Step = ChatStep.ChatInformation;
+            await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
             await turnContext.SendActivityAsync($"Welcome {userInformation.UserName}. Please enter your question to proceed");
         }
 
         private async Task CaptureChatInformation(ITurnContext turnContext, CancellationToken cancellationToken)
         {
+            var conversationInformation = await GetConversationInformation(turnContext);
+
+            if (string.IsNullOrEmpty(conversationInformation.Question))
+            {
+                conversationInformation.Question = turnContext.Activity.Text;
+            }
+            else
+            {
+                conversationInformation.Comments.Add(turnContext.Activity.Text);
+            }
+
             QnAResult[] qnaResults = await _qnAService.QueryQnAServiceAsync(turnContext.Activity.Text, new QnABotState(), QnAMakerEndpoint);
 
             if (qnaResults.Any())
@@ -192,12 +139,22 @@ namespace QnABot.Bots
                 if (prompts == null || prompts.Length < 1)
                 {
                     if (highestRankedResult.Score <= _minConfidenceScore)
+                    {
+                        stepInformation.Step = ChatStep.SupportTicket;
+                        await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
                         await turnContext.SendActivityAsync(_supportTicketCard.Create("how to fix the blue screen error?", "this is a test comment"), cancellationToken);
+                    }
                     else
+                    {
+                        conversationInformation.Comments.Add(answer);
+                        await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
                         await turnContext.SendActivityAsync(answer, cancellationToken: cancellationToken);
+                    }
                 }
                 else
                 {
+                    conversationInformation.Comments.Add(answer);
+                    await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
                     await turnContext.SendActivityAsync(CardHelper.GetHeroCardWithPrompts(answer, prompts), cancellationToken: cancellationToken);
                 }
             }
@@ -207,9 +164,40 @@ namespace QnABot.Bots
             }
         }
 
-        private void CaptureSupportTicket(ITurnContext turnContext, CancellationToken cancellationToken)
+        private async Task CaptureSupportTicketInformation(ITurnContext turnContext, CancellationToken cancellationToken)
         {
+            var supportInformation = await GetSupportInformation(turnContext);
 
+            var inputValue = turnContext.Activity.Value == null ? turnContext.Activity.Text : turnContext.Activity.Value.ToString();
+
+            var jsonData = JsonConvert.DeserializeObject<SupportTicketInformation>(inputValue);
+
+            supportInformation.Question = jsonData.Question;
+            supportInformation.Comments = jsonData.Comments;
+        }
+
+        private async Task<UserInformation> GetUserInformation(ITurnContext turnContext)
+        {
+            var userInformationStateAccessors = _botConversationState.CreateProperty<UserInformation>(nameof(UserInformation));
+            var userInformation = await userInformationStateAccessors.GetAsync(turnContext, () => new UserInformation());
+
+            return userInformation;
+        }
+
+        private async Task<ConversationInformation> GetConversationInformation(ITurnContext turnContext)
+        {
+            var conversationInformationStateAccessors = _botConversationState.CreateProperty<ConversationInformation>(nameof(ConversationInformation));
+            var conversationInformation = await conversationInformationStateAccessors.GetAsync(turnContext, () => new ConversationInformation());
+
+            return conversationInformation;
+        }
+
+        private async Task<SupportTicketInformation> GetSupportInformation(ITurnContext turnContext)
+        {
+            var supportInformationStateAccessors = _botConversationState.CreateProperty<SupportTicketInformation>(nameof(SupportTicketInformation));
+            var supportInformation = await supportInformationStateAccessors.GetAsync(turnContext, () => new SupportTicketInformation());
+
+            return supportInformation;
         }
 
         private void validateUserInput(ITurnContext turnContext, UserInformation userInformation, CancellationToken cancellationToken)
@@ -226,7 +214,52 @@ namespace QnABot.Bots
             }
         }
 
+        private void validateSupportInput(ITurnContext turnContext, SupportTicketInformation supportTicketInformation, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(supportTicketInformation.Question))
+            {
+                stepInformation.UserInputType = InputType.Text;
+                turnContext.SendActivityAsync("Please enter your question", cancellationToken: cancellationToken);
+            }
+            else if (string.IsNullOrEmpty(supportTicketInformation.Comments))
+            {
+                stepInformation.UserInputType = InputType.Text;
+                turnContext.SendActivityAsync("Please enter comments", cancellationToken: cancellationToken);
+            }
+        }
 
+        private QnAMakerEndpoint QnAMakerEndpoint
+        {
+            get
+            {
+                return new QnAMakerEndpoint
+                {
+                    KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
+                    EndpointKey = _configuration["QnAAuthKey"],
+                    Host = HostName
+                };
+            }
+        }
+
+        private string HostName
+        {
+            get
+            {
+                var hostname = _configuration["QnAEndpointHostName"];
+
+                if (!hostname.StartsWith("https://", System.StringComparison.CurrentCulture))
+                {
+                    hostname = string.Concat("https://", hostname);
+                }
+
+                if (!hostname.EndsWith("/qnamaker", System.StringComparison.CurrentCulture))
+                {
+                    hostname = string.Concat(hostname, "/qnamaker");
+                }
+
+                return hostname;
+            }
+        }
 
     }
 }

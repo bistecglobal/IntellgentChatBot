@@ -13,7 +13,7 @@ namespace QnABot.Cards
 
         public SupportTicketCard()
         {
-            cardPath = Path.Combine("Cards", "supportTicketForm.json");
+            cardPath = Path.Combine("Cards", "SupportTicketForm.json");
         }
 
         public IMessageActivity Create(string question, string questionData)

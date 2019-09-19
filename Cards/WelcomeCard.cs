@@ -13,7 +13,7 @@ namespace QnABot.Cards
 
         public WelcomeCard()
         {
-            cardPath = Path.Combine("Cards", "welcomeMessage.json");
+            cardPath = Path.Combine("Cards", "WelcomeMessage.json");
         }
 
         public IMessageActivity Create()
