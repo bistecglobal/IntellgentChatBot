@@ -8,15 +8,13 @@ using Newtonsoft.Json;
 
 namespace QnABot.Models
 {
-    public class SupportTicket
+    public class Incident
     {
 
         private readonly IConfiguration _configuration;
         private readonly HttpClient _http;
 
-        const string END_POINT = "table/incident";
-
-        public SupportTicket(IConfiguration configuration,
+        public Incident(IConfiguration configuration,
             IHttpClientFactory httpFactory)
         {
             _configuration = configuration;
@@ -25,7 +23,7 @@ namespace QnABot.Models
 
         public async Task<string> Create(SupportTicketInformation supportInformation)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{Url}/{END_POINT}");
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{Url}/{IncidentEndPoint}");
             request.Headers.Add("Accept", "application/json");
             request.Headers.Add("Authorization", AuthKey);
 
@@ -61,6 +59,14 @@ namespace QnABot.Models
             get
             {
                 return _configuration["TicketSystemAuthKey"];
+            }
+        }
+
+        private string IncidentEndPoint
+        {
+            get
+            {
+                return _configuration["TicketSystemIncidentEndPoint"];
             }
         }
 

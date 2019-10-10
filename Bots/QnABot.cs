@@ -28,7 +28,7 @@ namespace QnABot.Bots
         private readonly SupportTicketCard _supportTicketCard;
         private readonly BotConversationState _botConversationState;
         private readonly int _minConfidenceScore;
-        private readonly SupportTicket _supportTicket;
+        private readonly Incident _incident;
 
         private StepInformation stepInformation;
 
@@ -38,7 +38,7 @@ namespace QnABot.Bots
             WelcomeCard welcomeDialog,
             SupportTicketCard supportTicketCard,
             BotConversationState botConversationState,
-            SupportTicket supportTicket)
+            Incident incident)
         {
             _configuration = configuration;
             _logger = logger;
@@ -46,7 +46,7 @@ namespace QnABot.Bots
             _welcomeDialog = welcomeDialog;
             _supportTicketCard = supportTicketCard;
             _botConversationState = botConversationState;
-            _supportTicket = supportTicket;
+            _incident = incident;
 
             int.TryParse(configuration["MinConfidenceScore"], out _minConfidenceScore);
         }
@@ -167,7 +167,7 @@ namespace QnABot.Bots
             supportInformation.Question = jsonData.Question;
             supportInformation.Comments = jsonData.Comments;
 
-            var response = await _supportTicket.Create(supportInformation);
+            var response = await _incident.Create(supportInformation);
 
             if (!string.IsNullOrEmpty(response))
                 await turnContext.SendActivityAsync($"New ticket created in our incident tracker {response}", cancellationToken: cancellationToken);

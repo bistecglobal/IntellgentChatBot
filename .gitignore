@@ -4,3 +4,5 @@ obj/**
 bin/**
 runtimes/**
 .vs/**
+.DS_Store
+Properties/PublishProfiles/dasupportbotqna-bot - Web Deploy.pubxml.user
