@@ -30,10 +30,10 @@ namespace Microsoft.BotBuilderSamples
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            // Add the HttpClientFactory to be used for the QnAMaker calls.
             services.AddHttpClient();
 
-            // Create the Bot Framework Adapter with error handling enabled.
+            services.AddTransient<IBot, QnABot.Bots.QnABot>();
+
             services.AddSingleton<IBotFrameworkHttpAdapter, AdapterWithErrorHandler>();
 
             services.AddSingleton<IStorage, MemoryStorage>();
@@ -45,9 +45,6 @@ namespace Microsoft.BotBuilderSamples
             services.AddSingleton<UserStateStorage>();
 
             services.AddSingleton<ConversationStorage>();
-
-            // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, QnABot.Bots.QnABot>();
 
             services.AddTransient<QnAMakerEndpoint>();
 
@@ -66,6 +63,8 @@ namespace Microsoft.BotBuilderSamples
             services.AddTransient<SupportTicketCard>();
 
             services.AddTransient<Incident>();
+
+            services.AddTransient<UserFeedbackCard>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

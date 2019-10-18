@@ -26,6 +26,7 @@ namespace QnABot.Bots
         private readonly IQnAService _qnAService;
         private readonly WelcomeCard _welcomeDialog;
         private readonly SupportTicketCard _supportTicketCard;
+        private readonly UserFeedbackCard _userFeedbackCard;
         private readonly BotConversationState _botConversationState;
         private readonly int _minConfidenceScore;
         private readonly Incident _incident;
@@ -38,6 +39,7 @@ namespace QnABot.Bots
             WelcomeCard welcomeDialog,
             SupportTicketCard supportTicketCard,
             BotConversationState botConversationState,
+            UserFeedbackCard userFeedbackCard,
             Incident incident)
         {
             _configuration = configuration;
@@ -47,6 +49,7 @@ namespace QnABot.Bots
             _supportTicketCard = supportTicketCard;
             _botConversationState = botConversationState;
             _incident = incident;
+            _userFeedbackCard = userFeedbackCard;
 
             int.TryParse(configuration["MinConfidenceScore"], out _minConfidenceScore);
         }
@@ -84,6 +87,9 @@ namespace QnABot.Bots
                     break;
                 case ChatStep.ChatInformation:
                     await CaptureChatInformation(turnContext, cancellationToken);
+                    break;
+                case ChatStep.UserFeedback:
+                    await CaptureUserFeedback(turnContext, cancellationToken);
                     break;
                 case ChatStep.SupportTicket:
                     await CaptureSupportTicketInformation(turnContext, cancellationToken);
@@ -135,10 +141,10 @@ namespace QnABot.Bots
                 {
                     if (highestRankedResult.Score <= _minConfidenceScore)
                     {
-                        stepInformation.Step = ChatStep.SupportTicket;
+                        stepInformation.Step = ChatStep.UserFeedback;
                         conversationInformation.Question = turnContext.Activity.Text;
                         await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
-                        await turnContext.SendActivityAsync(_supportTicketCard.Create(turnContext.Activity.Text, String.Join(", ", conversationInformation.Comments.ToArray())), cancellationToken);
+                        await turnContext.SendActivityAsync(_userFeedbackCard.Create(), cancellationToken);
                     }
                     else
                     {
@@ -153,6 +159,27 @@ namespace QnABot.Bots
                     await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
                     await turnContext.SendActivityAsync(CardHelper.GetHeroCardWithPrompts(answer, prompts), cancellationToken: cancellationToken);
                 }
+            }
+        }
+
+        private async Task CaptureUserFeedback(ITurnContext turnContext, CancellationToken cancellationToken)
+        {
+            var conversationInformation = await GetConversationInformation(turnContext);
+
+            var inputValue = turnContext.Activity.Value == null ?
+                turnContext.Activity.Text : turnContext.Activity.Value.ToString();
+
+            var feedbackInformation = JsonConvert.DeserializeObject<UserFeedbackInformation>(inputValue);
+
+            if (feedbackInformation.Feedback.Equals("create"))
+            {
+                stepInformation.Step = ChatStep.SupportTicket;
+
+                await _botConversationState.SaveChangesAsync(turnContext, false, cancellationToken);
+
+                var activity = _supportTicketCard.Create(conversationInformation.Question, String.Join(", ", conversationInformation.Comments.ToArray()));
+
+                await turnContext.SendActivityAsync(activity, cancellationToken);
             }
         }
 

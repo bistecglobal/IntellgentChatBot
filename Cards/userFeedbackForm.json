@@ -1,0 +1,40 @@
+﻿{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.0",
+  "body": [
+    {
+      "type": "ColumnSet",
+      "columns": [
+        {
+          "type": "Column",
+          "width": 3,
+          "items": [
+            {
+              "type": "TextBlock",
+              "text": "Looks like we didn't find a good answer. Please let us know whether you want to create support ticker",
+              "isSubtle": true,
+              "wrap": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "Create Ticket",
+      "data": {
+        "operation": "create"
+      }
+    },
+    {
+      "type": "Action.Submit",
+      "title": "Don't Create Ticket",
+      "data": {
+        "operation": "dont"
+      }
+    }
+  ]
+}

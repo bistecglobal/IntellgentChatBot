@@ -5,7 +5,8 @@ namespace QnABot.Models
     {
         UserInformation = 1,
         ChatInformation = 2,
-        SupportTicket = 3,
+        UserFeedback = 3,
+        SupportTicket = 4,
         None
     }
 
