@@ -25,16 +25,8 @@ namespace QnABot.Models
                 Top = 1
             };
 
-            var hostname = qnAMakerEndpoint.Host;
+            var requestUrl = $"https://{qnAMakerEndpoint.Host}/qnamaker/knowledgebases/{qnAMakerEndpoint.KnowledgeBaseId}/generateanswer";
 
-            var endpoint = new QnAMakerEndpoint
-            {
-                KnowledgeBaseId = qnAMakerEndpoint.KnowledgeBaseId,
-                EndpointKey = qnAMakerEndpoint.EndpointKey,
-                Host = hostname
-            };
-
-            var requestUrl = $"{endpoint.Host}/knowledgebases/{endpoint.KnowledgeBaseId}/generateanswer";
             var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
             var jsonRequest = JsonConvert.SerializeObject(
                 new
@@ -47,12 +39,11 @@ namespace QnABot.Models
                     scoreThreshold = options.ScoreThreshold,
                 }, Formatting.None);
 
-            request.Headers.Add("Authorization", $"EndpointKey {endpoint.EndpointKey}");
+            request.Headers.Add("Authorization", $"EndpointKey {qnAMakerEndpoint.EndpointKey}");
             request.Content = new StringContent(jsonRequest, System.Text.Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
-
 
             var contentString = await response.Content.ReadAsStringAsync();
 

@@ -262,18 +262,8 @@ namespace QnABot.Bots
                 {
                     KnowledgeBaseId = _configuration["QnAKnowledgebaseId"],
                     EndpointKey = _configuration["QnAAuthKey"],
-                    Host = HostName
+                    Host = _configuration["QnAEndpointHostName"]
                 };
-            }
-        }
-
-        private string HostName
-        {
-            get
-            {
-                var hostname = _configuration["QnAEndpointHostName"];
-
-                return hostname;
             }
         }
 

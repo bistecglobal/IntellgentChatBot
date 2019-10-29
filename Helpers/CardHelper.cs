@@ -32,7 +32,7 @@ namespace QnABot.Helpers
                         Title = prompt.DisplayText
                     });
             }
-
+            
             var plCard = new HeroCard()
             {
                 Text = cardTitle,

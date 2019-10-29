@@ -18,6 +18,7 @@ namespace Microsoft.BotBuilderSamples
                 logger.LogError($"Exception caught : {exception}");
                 await turnContext.SendActivityAsync("Sorry, it looks like something went wrong.");
                 await turnContext.SendActivityAsync("To run this sample make sure you have the QnA model deployed.");
+                await turnContext.SendActivityAsync($"Exception caught : {exception.Message}");
             };
         }
     }
