@@ -7,3 +7,4 @@ runtimes/**
 .DS_Store
 Properties/PublishProfiles/dasupportbotqna-bot - Web Deploy.pubxml.user
 .vscode/
+appsettings.json
