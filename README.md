@@ -18,7 +18,8 @@ The [QnA Maker Service][19] enables you to build, train and publish a simple que
 - Follow instructions [here](https://docs.microsoft.com/en-us/azure/cognitive-services/qnamaker/how-to/set-up-qnamaker-service-azure)
 to create a QnA Maker service.
 - Follow instructions [here](https://docs.microsoft.com/en-us/azure/cognitive-services/qnamaker/tutorials/migrate-knowledge-base) to import a knowledgebase to your newly created QnA Maker service.
-- Update the `appsettings.json` of the Bot with your kbid (KnowledgeBase Id), hostname, and endpointKey. You can find this
+- Update the `appsettings.json` of the Bot with your kbid (KnowledgeBase Id), hostname, and endpointKey, cosmos db settings(CosmosServiceEndpoint, CosmosDBKey, CosmosDBDatabaseName, ConversationStateCollectionName,
+UserStateCollectionName) also, the details for the Ticket system(TicketSystemDomainAPI, TicketSystemAuthKey, TicketSystemIncidentEndPoint). You can find this
 information under "Settings" tab for your QnA Maker Knowledge Base at [QnAMaker.ai](https://www.qnamaker.ai)
 - (Optional) Follow instructions [here](https://github.com/Microsoft/botbuilder-tools/tree/master/packages/QnAMaker) to set up the
 QnA Maker CLI to deploy the model.
