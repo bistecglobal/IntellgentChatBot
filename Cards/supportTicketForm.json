@@ -9,38 +9,64 @@
                 {
                     "type": "Column",
                     "width": 3,
-                    "items": [
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "Looks like we didn't find a good answer. Please fill in the form below to create a ticket.",
+                      "isSubtle": true,
+                      "wrap": true
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Your question?",
+                      "isSubtle": true,
+                      "wrap": true
+                    },
+                    {
+                      "type": "Input.Text",
+                      "id": "question",
+                      "placeholder": "Enter your question",
+                      "value": "<%question%>"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Your comments",
+                      "wrap": true
+                    },
+                    {
+                      "type": "Input.Text",
+                      "id": "comments",
+                      "placeholder": "Enter your comments",
+                      "isMultiline": true,
+                      "value": "<%comments%>"
+                    },
+                    {
+                      "type": "TextBlock",
+                      "text": "Priority",
+                      "wrap": true
+                    },
+                    {
+                      "type": "Input.ChoiceSet",
+                      "id": "priority",
+                      "style": "compact",
+                      "isMultiSelect": false,
+                      "value": "1",
+                      "choices": [
                         {
-                            "type": "TextBlock",
-                            "text": "Looks like we didn't find a good answer. Please fill in the form below to create a ticket.",
-                            "isSubtle": true,
-                            "wrap": true
+                          "title": "High",
+                          "value": "3"
                         },
                         {
-                            "type": "TextBlock",
-                            "text": "Your question?",
-                            "isSubtle": true,
-                            "wrap": true
+                          "title": "Moderate",
+                          "value": "2"
                         },
                         {
-                            "type": "Input.Text",
-                            "id": "question",
-                            "placeholder": "Enter your question",
-                            "value": "<%question%>"
-                        },
-                        {
-                            "type": "TextBlock",
-                            "text": "Your comments?",
-                            "wrap": true
-                        },
-                        {
-                            "type": "Input.Text",
-                            "id": "comments",
-                            "placeholder": "Enter your comments",
-                            "isMultiline": true,
-                            "value": "<%comments%>"
+                          "title": "Low",
+                          "value": "1"
                         }
-                    ]
+                      ]
+                    }
+                  ]
                 }
             ]
         }
